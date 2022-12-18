@@ -1,14 +1,19 @@
 <template>
   <div id="app">
     <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/about">About</router-link>
+      <router-link to="/frete">frete</router-link> |
+      <router-link to="/frete/cadastrar">novo frete</router-link>
     </nav>
     <router-view/>
   </div>
 </template>
 
 <style lang="scss">
+
+.division{
+  margin-top: 20px;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
