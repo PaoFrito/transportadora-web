@@ -1,5 +1,9 @@
 import { Frete } from '@/model/Frete'
 import axios, { AxiosInstance } from 'axios'
+import { FreteEmTransporte } from '../DTO/FreteEmTransporte';
+import { FreteObservacao } from '../DTO/FreteObervacao';
+import { FreteDescarga } from '../DTO/FreteDescarga';
+import { FreteAtualizado } from '../DTO/FreteAtualizado';
 
 export class FreteClient {
 
@@ -39,18 +43,50 @@ export class FreteClient {
         }
     }
 
-    public async update(frete: Frete) : Promise<void> {
+    public async delete(id: number) : Promise<void> {
+        try{
+            return (await this.axiosClient.delete(`/${id}`)).data
+        }catch(error: any){
+            return Promise.reject(error.response)
+        }
+    }
+
+    public async updateStatusEmTransporte(frete: FreteEmTransporte) : Promise<void> {
         try {
-            return (await this.axiosClient.put(`/${frete.id}`, frete)).data
+            return (await this.axiosClient.put(`/status/em_transporte/${frete.id}`, frete)).data
         } catch (error: any) {
             return Promise.reject(error.response)
         }
     }
 
-    public async delete(id: number) : Promise<void> {
-        try{
-            return (await this.axiosClient.delete(`/${id}`)).data
-        }catch(error: any){
+    public async updateStatusInterrompido(frete: FreteObservacao) : Promise<void> {
+        try {
+            return (await this.axiosClient.put(`/status/interrompido/${frete.id}`, frete)).data
+        } catch (error: any) {
+            return Promise.reject(error.response)
+        }
+    }
+
+    public async updateStatusDescarga(frete: FreteDescarga) : Promise<void> {
+        try {
+            return (await this.axiosClient.put(`/status/descarga/${frete.id}`, frete)).data
+        } catch (error: any) {
+            return Promise.reject(error.response)
+        }
+    }
+
+    public async updateStatusFaturado(frete: FreteAtualizado) : Promise<void> {
+        try {
+            return (await this.axiosClient.put(`/status/faturado/${frete.id}`, frete)).data
+        } catch (error: any) {
+            return Promise.reject(error.response)
+        }
+    }
+
+    public async updateStatusCancelado(frete: FreteObservacao) : Promise<void> {
+        try {
+            return (await this.axiosClient.put(`/status/cancelado/${frete.id}`, frete)).data
+        } catch (error: any) {
             return Promise.reject(error.response)
         }
     }

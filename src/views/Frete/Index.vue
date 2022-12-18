@@ -1,9 +1,31 @@
 <template>
 <div>
+
+<!-- MESSAGES -->
+<div class="container">
+    <!-- Sucesso -->
+    <b-message 
+        title="Sucesso!" 
+        type="is-success" 
+        v-model="showSuccessPopUp" 
+        aria-close-label="Close message">
+        {{popUpMessage}}
+    </b-message>
+
+    <!-- Erro -->
+    <b-message 
+        title="Atencao" 
+        type="is-warning" 
+        v-model="showErrorPopUp" 
+        aria-close-label="Close message">
+        {{popUpMessage}}
+    </b-message>
+</div>
+
 <!-- modals -->    
 <div>
     <!-- Atualizado -->
-    <div  class="modal" v-bind:class="{'modal is-active': showModal}">
+    <div v-if="curStatusFrete == statusfrete.descarga" class="modal" v-bind:class="{'modal is-active': showModal}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -21,7 +43,7 @@
                 </form>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-success">Atualizar</button>
+                <button class="button is-success" @click="updateFreteFaturado()">Atualizar</button>
                 <button class="button"  @click="closeModal()">Cancelar</button>
             </footer>
         </div>
@@ -46,7 +68,7 @@
                                     min-step="0.01"
                                     aria-minus-label="Decrement by 5"
                                     aria-plus-label="Increment by 5"
-                                    v-model="frete.quilometragemFim"
+                                    v-model="freteDescarga.quilometragemFim"
                                 ></b-numberinput>
                             </b-field>
                         </div>
@@ -58,7 +80,7 @@
                                     min-step="0.01"
                                     aria-minus-label="Decrement by 1"
                                     aria-plus-label="Increment by 1"
-                                    v-model="frete.pesoFinal"
+                                    v-model="freteDescarga.pesoFinal"
                                 ></b-numberinput>
                             </b-field>
                         </div>  
@@ -66,7 +88,7 @@
                 </form>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-success">Atualizar</button>
+                <button class="button is-success" @click="updateFreteDescarga()">Atualizar</button>
                 <button class="button"  @click="closeModal()">Cancelar</button>
             </footer>
         </div>
@@ -91,7 +113,7 @@
                                     min-step="0.01"
                                     aria-minus-label="Decrement by 5"
                                     aria-plus-label="Increment by 5"
-                                    v-model="frete.quilometragemFim"
+                                    v-model="freteEmTransporte.quilometragemIni"
                                 ></b-numberinput>
                             </b-field>
                         </div>
@@ -103,7 +125,7 @@
                                     min-step="0.01"
                                     aria-minus-label="Decrement by 1"
                                     aria-plus-label="Increment by 1"
-                                    v-model="frete.pesoFinal"
+                                    v-model="freteEmTransporte.pesoInicial"
                                 ></b-numberinput>
                             </b-field>
                         </div>
@@ -111,14 +133,14 @@
                 </form>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-success">Atualizar</button>
+                <button class="button is-success" @click="updateFreteTransporte()">Atualizar</button>
                 <button class="button"  @click="closeModal()">Cancelar</button>
             </footer>
         </div>
     </div>
 
     <!-- Observacao -->
-    <div v-if="curStatusFrete == statusfrete.em_transporte" class="modal" v-bind:class="{'modal is-active': showModal}">
+    <div v-if="curStatusFrete == statusfrete.interrompido || curStatusFrete == statusfrete.cancelado" class="modal" v-bind:class="{'modal is-active': showModal}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -130,7 +152,7 @@
                     <div class="container">
                         <div class="division"></div>
                         <div class="container">
-                            <b-field v-model="frete." label="Observacao">
+                            <b-field v-model="freteObservacao.observacao" label="Observacao">
                                 <b-input maxlength="200" type="textarea" placeholder="..."></b-input>
                             </b-field>
                         </div>
@@ -138,7 +160,7 @@
                 </form>
             </section>
             <footer class="modal-card-foot">
-                <button class="button is-success">Atualizar</button>
+                <button class="button is-success" @click="updateFreteObservacao()">Atualizar</button>
                 <button class="button"  @click="closeModal()">Cancelar</button>
             </footer>
         </div>
@@ -227,6 +249,8 @@ import { FreteAtualizado } from '../../DTO/FreteAtualizado';
 import { FreteDescarga } from '../../DTO/FreteDescarga';
 import { FreteEmTransporte } from '../../DTO/FreteEmTransporte';
 import { FreteObservacao } from '../../DTO/FreteObervacao';
+import { UserClient } from '../../client/UserClient';
+import { User } from '@/model/User';
 
 class LocalStatusFrete{
     carga: string = StatusFrete[StatusFrete.CARGA]
@@ -240,24 +264,30 @@ class LocalStatusFrete{
 @Component
 export default class FreteView extends Vue{
     private freteClient: FreteClient = new FreteClient()
-    public freteList: Frete[] = []
+    public freteList: Frete[] = []  
 
-    public freteAtualizado: FreteAtualizado = new FreteAtualizado()
+    private userClient: UserClient = new UserClient()
+    private executor: User = new User()
+
+    private freteAtualizado: FreteAtualizado = new FreteAtualizado()
     public freteDescarga: FreteDescarga = new FreteDescarga()
     public freteEmTransporte: FreteEmTransporte = new FreteEmTransporte()
     public freteObservacao: FreteObservacao = new FreteObservacao()
 
-    public statusfrete: LocalStatusFrete = new LocalStatusFrete
+    public statusfrete: LocalStatusFrete = new LocalStatusFrete()
 
     public showModal: boolean = false
+    public showSuccessPopUp: boolean = false
+    public showErrorPopUp: boolean = false
+    public popUpMessage: string = ""
 
     public curFrete: Frete = new Frete()
     public curStatusFrete: string = ""
 
     public mounted(): void {
         this.getFretes()
+        this.getUser()
         this.nullCurFrete()
-
     }
 
     private nullCurFrete(): void{
@@ -266,6 +296,7 @@ export default class FreteView extends Vue{
         this.curFrete.quilometragemIni = 0
         this.curFrete.pesoFinal = 0
         this.curFrete.pesoInicial = 0  
+        this.curStatusFrete = ""
     }
 
     public openModal(curFrete: Frete, status: string) : void{
@@ -279,12 +310,167 @@ export default class FreteView extends Vue{
         this.nullCurFrete()
     }
 
-    public updateFrete(): void{
+    private showSuccess(msg: string = "Atualizado com sucesso!"): void{
+        this.popUpMessage = msg
+        this.showSuccessPopUp = true
+    }
 
+    private showError(msg: string = "Erro ao atualizar"): void{
+        this.popUpMessage = msg
+        this.showErrorPopUp = true
+    }
+
+    private validateFreteTransporte(): boolean{
+        if(this.freteEmTransporte.pesoInicial >= 100 || this.freteEmTransporte.pesoInicial <= 0)
+            return false
+
+        if(this.freteEmTransporte.quilometragemIni <= 0 || this.freteEmTransporte.quilometragemIni == null)
+            return false
+
+        return true
+    }
+
+    public updateFreteTransporte(): void{
+
+        if(!this.validateFreteTransporte()){
+            this.showError("Um ou mais campos invalidos")
+            return
+        }
+
+        this.freteEmTransporte.id = this.curFrete.id
+        this.freteEmTransporte.statusAtual = this.curFrete.statusFrete
+        this.freteEmTransporte.executor = this.executor
+
+        this.freteClient.updateStatusEmTransporte(this.freteEmTransporte)
+        .then(
+            success => {
+                this.showSuccess()
+            },
+            error => {
+                console.log(error)
+                this.showError(error)
+            }
+        )
+
+        this.closeModal()
+    }
+
+    private validateFreteObservacao(): boolean{
+        if(this.freteObservacao.observacao == null)
+            return false
+
+        return true
+    }
+
+    public updateFreteObservacao(): void{
+        if(!this.validateFreteObservacao()){
+            this.showError("Um ou mais campos invalidos")
+            return
+        }
+
+        this.freteObservacao.id = this.curFrete.id
+        this.freteObservacao.statusAtual = this.curFrete.statusFrete
+        this.freteObservacao.executor = this.executor
+
+        if(this.curStatusFrete == this.statusfrete.interrompido)
+            this.updateFreteInterrompido()
+
+        if(this.curStatusFrete == this.statusfrete.cancelado)
+            this.updateFreteCancelado()
+
+        this.closeModal()
+    }
+
+    private updateFreteInterrompido(): void{
+        this.freteClient.updateStatusInterrompido(this.freteObservacao)
+        .then(
+            success => {
+                this.showSuccess()
+            },
+            error => {
+                console.log(error)
+                this.showError(error)
+            }
+        )
+    }
+
+    private updateFreteCancelado(): void{
+        this.freteClient.updateStatusCancelado(this.freteObservacao)
+        .then(
+            success => {
+                this.showSuccess()
+            },
+            error => {
+                console.log(error)
+                this.showError(error)
+            }
+        )
+    }
+
+    private validateFreteDescarga(): boolean{
+        if(this.freteDescarga.pesoFinal >= 100 || this.freteDescarga.pesoFinal == null)
+            return false
+
+        if(this.freteDescarga.quilometragemFim == null)
+            return false
+
+        return true
+    }
+
+    public updateFreteDescarga(): void{
+
+        if(this.validateFreteDescarga()){
+            this.showError("Um ou mais campos invalidos")
+            return
+        }
+
+        this.freteDescarga.id = this.curFrete.id
+        this.freteDescarga.statusAtual = this.curFrete.statusFrete
+        this.freteDescarga.executor = this.executor
+
+        this.freteClient.updateStatusDescarga(this.freteDescarga)
+        .then(
+            success => {
+                this.showSuccess()
+            },
+            error => {
+                console.log(error)
+                this.showError(error)
+            }
+        )
+
+        this.closeModal()
+    }
+
+    public updateFreteFaturado(): void{
+        this.freteAtualizado.id = this.curFrete.id
+        this.freteAtualizado.statusAtual = this.curFrete.statusFrete
+        this.freteAtualizado.executor = this.executor
+
+        this.freteClient.updateStatusFaturado(this.freteAtualizado)
+        .then(
+            success => {
+                this.showSuccess()
+            },
+            error => {
+                console.log(error)
+                this.showError(error)
+            }
+        )
+
+        this.closeModal()
     }
 
     public async getFretes(): Promise<void>{
         this.freteList = await this.freteClient.findAll()
+    }
+
+    private getUser(): void {
+        this.userClient.findById(4)
+        .then(
+            success => {this.executor = success},
+            error => {console.log(error)}
+        )
     }
 
 }
