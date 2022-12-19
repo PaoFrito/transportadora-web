@@ -35,6 +35,14 @@ export class FreteClient {
         }
     }
 
+    public async getAllInProgress() : Promise<Frete[]> {
+        try {
+            return (await this.axiosClient.get<Frete[]>(`/inProgress`)).data
+        } catch (error: any) {
+            return Promise.reject(error.response)
+        }
+    }
+
     public async create(frete: NewFreteDTO) : Promise<void> {
         try {
             console.log("client")

@@ -3,7 +3,7 @@ import { Frete } from "./Frete"
 import { TipoDespesa } from "./TipoDespesa"
 import { User } from "./User"
 
-export class Caminhao extends AbstractEntity{
+export class Despesa extends AbstractEntity{
 
     tipoDespesa!: TipoDespesa
     valor!: number
