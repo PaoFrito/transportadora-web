@@ -31,7 +31,7 @@
                     <div class="columns">
                         <div class="column">
                             <b-field label="Tipo de despesa">
-                                <b-select v-model="despesa.tipoDespesa" placeholder="-- Selecione --" :disabled="edit">
+                                <b-select v-model="despesa.tipoDespesa" placeholder="-- Selecione --" :disabled="!edit">
                                     <option v-for="tipoDespesa in tipoDespesaList" :value="tipoDespesa"> {{ tipoDespesa.nome }} </option>
                                 </b-select>
                             </b-field>
@@ -56,6 +56,7 @@
                         <div class="column">
                             <b-field label="Data da Despesa">
                                 <b-datepicker
+                                    :disabled="false"
                                     v-model="despesa.data"
                                     placeholder="Selecione uma data"
                                     :min-date="( d => new Date(d.setDate(d.getDate()-1)) )(new Date)"
@@ -71,7 +72,7 @@
                             </b-field>
                         </div>
                         <div class="column">
-                            <b-field v-bind:label="{'Frete Anexado': true, 'Anexar a qual frete?': edit}">
+                            <b-field v-bind:label="freteLabel">
                                 <b-select v-model="despesa.frete" placeholder="-- Selecione --" :disabled="!edit">
                                     <option v-for="frete in freteList" :value="frete">{{ frete.id }} / {{ frete.statusFrete }} / {{ frete.cidadeOrigem.nome}}~{{ frete.cidadeDestino.nome}}</option>
                                 </b-select>
@@ -125,6 +126,8 @@ export default class DespesaDetailView extends Vue{
     public despesaId: number = 0
     public edit: boolean = false
 
+    public freteLabel!: string
+
     public alert: Alert = new Alert()
 
     private loggedUser: LoggedUser = new LoggedUser()
@@ -147,6 +150,12 @@ export default class DespesaDetailView extends Vue{
         this.getTipoDespesas()
         this.getFretes()
         this.getMotorista()
+
+        if(this.despesaId != 0 && !this.edit)
+            this.freteLabel = "Anexar despesa a qual frete?"
+        else
+            this.freteLabel = "Despesa anexada ao frete:"
+        
     }
 
     private validation(): boolean{
