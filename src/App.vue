@@ -14,6 +14,19 @@
   margin-top: 20px;
 }
 
+.vertical-divisor{
+  border-left: 6px solid #00D1B2;
+  height: 270px;
+}
+
+.text-align-left{
+  text-align: left !important;
+}
+
+.text-align-right{
+  text-align: right !important;
+}
+
 #app {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

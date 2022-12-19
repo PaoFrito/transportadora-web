@@ -3,6 +3,7 @@ import VueRouter, { RouteConfig } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import FreteView from '@/views/Frete/Index.vue'
 import CadastrarFreteView from '@/views/Frete/Cadastrar.vue'
+import DetalharFreteView from '@/views/Frete/Detalhar.vue'
 
 Vue.use(VueRouter)
 
@@ -29,6 +30,11 @@ const routes: Array<RouteConfig> = [
     path: '/frete/cadastrar',
     name: 'Cadastrar novo frete',
     component: CadastrarFreteView
+  },
+  {
+    path: '/frete/:Freteid',
+    name: 'Detalhar frete',
+    component: DetalharFreteView
   }
 ]
 

@@ -3,10 +3,10 @@
 <!-- Alerts -->
 <div>
     <!-- Sucesso -->
-    <AlertSuccess v-if="alert.success" :msg=alert.msg />
+    <AlertSuccess v-if="alert.getSuccess()" :msg=alert.getMsg />
 
     <!-- Erro -->
-    <AlertWarning v-if="alert.error" :msg=alert.msg />
+    <AlertWarning v-if="alert.getError()" :msg=alert.getMsg() />
 </div>    
 
 <section class="section">

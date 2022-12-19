@@ -13,7 +13,7 @@
 <!-- modals -->    
 <div>
     <!-- Atualizado -->
-    <div v-if="curStatusFrete == statusfrete.descarga" class="modal" v-bind:class="{'modal is-active': modal.getState()}">
+    <div v-if="curStatusFrete == statusfrete.faturado" class="modal" v-bind:class="{'modal is-active': modal.getState()}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -183,7 +183,10 @@
             </thead>
             <tbody>
                 <tr v-for="frete in freteList">
-                    <td><b-button class="is-medium" type="is-info">↗</b-button></td>
+                    <td><b-button class="is-medium" type="is-info">
+                        <p>{{frete.id}}</p>
+                        <router-link v-bind:to="'frete/' + frete.id">↗</router-link>
+                    </b-button></td>
                     <td>{{ frete.cadastro}}</td>
                     <td>{{ frete.atualizado }}</td>
                     <td>{{ frete.cidadeOrigem.nome }}</td>
@@ -229,11 +232,12 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue';
-import Component from "vue-class-component";
+import { Vue, Component } from 'vue-property-decorator'
 
 import Alert from '@/util/classes/Alert'
 import { AlertMsg } from '@/util/enums/AlertMsg'
+import AlertSuccess from '@/components/Alerts/Success.vue'
+import AlertWarning from '@/components/Alerts/Warning.vue'
 
 import { FreteClient } from '../../client/FreteClient';
 import { Frete } from '../../model/Frete';
@@ -255,7 +259,13 @@ class LocalStatusFrete{
     cancelado: string = StatusFrete[StatusFrete.CANCELADO]
 }
 
-@Component
+@Component({
+  components: {
+    AlertSuccess,
+    AlertWarning
+  },
+})
+
 export default class FreteView extends Vue{
     private freteClient: FreteClient = new FreteClient()
     public freteList: Frete[] = []  
