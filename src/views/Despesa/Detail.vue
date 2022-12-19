@@ -56,7 +56,7 @@
                         <div class="column">
                             <b-field label="Data da Despesa">
                                 <b-datepicker
-                                    :disabled="false"
+                                    :disabled="!edit"
                                     v-model="despesa.data"
                                     placeholder="Selecione uma data"
                                     :min-date="( d => new Date(d.setDate(d.getDate()-1)) )(new Date)"
@@ -82,7 +82,8 @@
                 </div>      
                 <div class="division"></div>
                 <div class="container">
-                    <div>
+                    <div v-if="despesaId != 0 && edit">
+                        <b-button @click="cancelar()" class="mr-6">Cancelar</b-button>
                         <b-button type="is-success" @click="salvar()">Enviar</b-button>
                     </div>
                 </div>
@@ -98,7 +99,7 @@
 
 import Alert from '@/util/classes/Alert'
 
-import { Component, Prop, Vue } from 'vue-property-decorator';
+import { Component, Vue } from 'vue-property-decorator';
 
 import AlertSuccess from '@/components/Alerts/Success.vue'
 import AlertWarning from '@/components/Alerts/Warning.vue'
@@ -110,7 +111,6 @@ import LoggedUser from '../../LoggedUser';
 import { TipoDespesaClient } from '../../client/TipoDespesaClient';
 import { UserClient } from '@/client/UserClient';
 import { FreteClient } from '@/client/FreteClient';
-import { Grupo } from '@/model/enum/Grupo'
 import { Despesa } from '@/model/Despesa';
 import { DespesaClient } from '@/client/DespesaClient';
 
@@ -174,6 +174,10 @@ export default class DespesaDetailView extends Vue{
         return true
     }
 
+    public cancelar(): void{
+        this.editOff()
+    }
+
     public salvar(): void{
         if(!this.validation()){
             this.alert.showPopUp(false, AlertMsg.invalidField)
@@ -206,7 +210,9 @@ export default class DespesaDetailView extends Vue{
     private getDespesas(): void{
         this.despesaClient.findById(this.despesaId)
         .then(
-            success => {this.despesa = success},
+            success => {
+                this.despesa = success                
+            },
             error => {console.log(error)}
         )
     }
