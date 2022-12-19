@@ -8,10 +8,6 @@
         <router-view />
     </div>
 </template>
-<script lang="ts">
-
-</script>
-
 <style lang="scss">
 .division {
     margin-top: 20px;

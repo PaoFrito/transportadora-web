@@ -9,15 +9,15 @@
     <div class="columns">
         <div class="column">
             <h2  class="title is-2">
-                <span v-if="despesaId == 0">Cadastrar</span> 
+                <span v-if="create">Cadastrar</span> 
                 <span v-if="edit">Editar</span> 
-                <span v-if="despesaId != 0 && !edit">Detalhes da</span> 
+                <span v-if="detail">Detalhes da</span> 
                 Despesa
             </h2>
         </div>
     </div>
     <div>
-        <b-button v-if="despesaId != 0 && !edit" @click="editOn()" type="is-primary">Editar</b-button>
+        <b-button v-if="detail" @click="editOn()" type="is-primary">Editar</b-button>
     </div>
 </section>
 <section class="section">
@@ -31,7 +31,7 @@
                     <div class="columns">
                         <div class="column">
                             <b-field label="Tipo de despesa">
-                                <b-select v-model="despesa.tipoDespesa" placeholder="-- Selecione --" :disabled="!edit">
+                                <b-select v-model="despesa.tipoDespesa" placeholder="-- Selecione --" :disabled="detail">
                                     <option v-for="tipoDespesa in tipoDespesaList" :value="tipoDespesa"> {{ tipoDespesa.nome }} </option>
                                 </b-select>
                             </b-field>
@@ -39,7 +39,7 @@
                         <div class="column">
                             <b-field label="Valor (R$)">
                             <b-numberinput
-                                :disabled="!edit"
+                                :disabled="detail"
                                 step="10"
                                 min-step="0.01"
                                 aria-minus-label="Decrement by 10"
@@ -56,7 +56,7 @@
                         <div class="column">
                             <b-field label="Data da Despesa">
                                 <b-datepicker
-                                    :disabled="!edit"
+                                    :disabled="detail"
                                     v-model="despesa.data"
                                     placeholder="Selecione uma data"
                                     :min-date="( d => new Date(d.setDate(d.getDate()-1)) )(new Date)"
@@ -73,7 +73,7 @@
                         </div>
                         <div class="column">
                             <b-field v-bind:label="freteLabel">
-                                <b-select v-model="despesa.frete" placeholder="-- Selecione --" :disabled="!edit">
+                                <b-select v-model="despesa.frete" placeholder="-- Selecione --" :disabled="detail">
                                     <option v-for="frete in freteList" :value="frete">{{ frete.id }} / {{ frete.statusFrete }} / {{ frete.cidadeOrigem.nome}}~{{ frete.cidadeDestino.nome}}</option>
                                 </b-select>
                             </b-field>
@@ -82,8 +82,8 @@
                 </div>      
                 <div class="division"></div>
                 <div class="container">
-                    <div v-if="despesaId != 0 && edit">
-                        <b-button @click="cancelar()" class="mr-6">Cancelar</b-button>
+                    <div v-if="edit || create">
+                        <b-button @click="editOff()" class="mr-6">Cancelar</b-button>
                         <b-button type="is-success" @click="salvar()">Enviar</b-button>
                     </div>
                 </div>
@@ -124,7 +124,10 @@ import { DespesaClient } from '@/client/DespesaClient';
 export default class DespesaDetailView extends Vue{
 
     public despesaId: number = 0
+
     public edit: boolean = false
+    public detail: boolean = false
+    public create: boolean = false
 
     public freteLabel!: string
 
@@ -145,6 +148,7 @@ export default class DespesaDetailView extends Vue{
 
     public mounted(): void {
         this.despesaId = <number>(<unknown>this.$route.params.DespesaId)
+        this.change()
         this.loggedUser.setId()
         this.getDespesas()
         this.getTipoDespesas()
@@ -156,6 +160,13 @@ export default class DespesaDetailView extends Vue{
         else
             this.freteLabel = "Despesa anexada ao frete:"
         
+    }
+
+    private change(): void{
+        if(this.despesaId = 0)
+            this.create = true
+        else
+            this.detail = true
     }
 
     private validation(): boolean{
@@ -172,10 +183,6 @@ export default class DespesaDetailView extends Vue{
             return false
 
         return true
-    }
-
-    public cancelar(): void{
-        this.editOff()
     }
 
     public salvar(): void{
@@ -201,10 +208,12 @@ export default class DespesaDetailView extends Vue{
 
     public editOn(): void{
         this.edit = true
+        this.detail = false
     }
 
     public editOff(): void{
         this.edit = false
+        this.detail = true
     }
 
     private getDespesas(): void{

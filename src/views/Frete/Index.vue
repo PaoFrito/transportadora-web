@@ -173,8 +173,7 @@
                     <tbody>
                         <tr v-for="frete in freteList">
                             <td>
-                                <b-button tag="router-link" v-bind:to="'/frete/' + frete.id" class="is-medium"
-                                    type="is-info">↗</b-button>
+                                <b-button tag="router-link" v-bind:to="'/frete/' + frete.id" class="is-medium" type="is-info">↗</b-button>
                             </td>
                             <td>{{ frete.id }}</td>
                             <td>{{ frete.cadastro }}</td>

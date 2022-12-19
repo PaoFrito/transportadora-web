@@ -5,6 +5,7 @@ import FreteView from '@/views/Frete/Index.vue'
 import CadastrarFreteView from '@/views/Frete/Cadastrar.vue'
 import DetalharFreteView from '@/views/Frete/Detalhar.vue'
 import DespesaDetailView from '@/views/Despesa/Detail.vue'
+import DespesaView from '@/views/Despesa/Index.vue'
 
 Vue.use(VueRouter)
 
@@ -41,6 +42,11 @@ const routes: Array<RouteConfig> = [
         path: '/despesa/:DespesaId',
         name: 'Cadastrar nova despesa',
         component: DespesaDetailView
+    },
+    {
+        path: '/despesa',
+        name: 'Lista de despesas',
+        component: DespesaView
     }
 ]
 
