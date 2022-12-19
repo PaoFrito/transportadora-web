@@ -1,31 +1,19 @@
 <template>
 <div>
 
-<!-- MESSAGES -->
-<div class="container">
+<!-- Alerts -->
+<div>
     <!-- Sucesso -->
-    <b-message 
-        title="Sucesso!" 
-        type="is-success" 
-        v-model="showSuccessPopUp" 
-        aria-close-label="Close message">
-        {{popUpMessage}}
-    </b-message>
+    <AlertSuccess v-if="alert.getSuccess()" :msg=alert.getMsg() />
 
     <!-- Erro -->
-    <b-message 
-        title="Atencao" 
-        type="is-warning" 
-        v-model="showErrorPopUp" 
-        aria-close-label="Close message">
-        {{popUpMessage}}
-    </b-message>
-</div>
+    <AlertWarning v-if="alert.getError()" :msg=alert.getMsg() />
+</div>  
 
 <!-- modals -->    
 <div>
     <!-- Atualizado -->
-    <div v-if="curStatusFrete == statusfrete.descarga" class="modal" v-bind:class="{'modal is-active': showModal}">
+    <div v-if="curStatusFrete == statusfrete.descarga" class="modal" v-bind:class="{'modal is-active': modal.getState()}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -50,7 +38,7 @@
     </div>
     
     <!-- Descarga -->
-    <div v-if="curStatusFrete == statusfrete.descarga" class="modal" v-bind:class="{'modal is-active': showModal}">
+    <div v-if="curStatusFrete == statusfrete.descarga" class="modal" v-bind:class="{'modal is-active': modal.getState()}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -95,7 +83,7 @@
     </div>
 
     <!-- Em transporte -->
-    <div v-if="curStatusFrete == statusfrete.em_transporte" class="modal" v-bind:class="{'modal is-active': showModal}">
+    <div v-if="curStatusFrete == statusfrete.em_transporte" class="modal" v-bind:class="{'modal is-active': modal.getState()}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -140,7 +128,7 @@
     </div>
 
     <!-- Observacao -->
-    <div v-if="curStatusFrete == statusfrete.interrompido || curStatusFrete == statusfrete.cancelado" class="modal" v-bind:class="{'modal is-active': showModal}">
+    <div v-if="curStatusFrete == statusfrete.interrompido || curStatusFrete == statusfrete.cancelado" class="modal" v-bind:class="{'modal is-active': modal.getState()}">
         <div class="modal-background"></div>
         <div class="modal-card">
             <header class="modal-card-head">
@@ -181,6 +169,7 @@
         <table class="table is-striped is-bordered is-narrow is-fullwidth">
             <thead>
                 <tr>
+                    <th>Detalhar</th>
                     <th>Frete criado em</th>
                     <th>Ultima atualizacao em</th>
                     <th>Cidade de Origem</th>
@@ -194,6 +183,7 @@
             </thead>
             <tbody>
                 <tr v-for="frete in freteList">
+                    <td><b-button class="is-medium" type="is-info">↗</b-button></td>
                     <td>{{ frete.cadastro}}</td>
                     <td>{{ frete.atualizado }}</td>
                     <td>{{ frete.cidadeOrigem.nome }}</td>
@@ -242,6 +232,9 @@
 import Vue from 'vue';
 import Component from "vue-class-component";
 
+import Alert from '@/util/classes/Alert'
+import { AlertMsg } from '@/util/enums/AlertMsg'
+
 import { FreteClient } from '../../client/FreteClient';
 import { Frete } from '../../model/Frete';
 import { StatusFrete } from '../../model/enum/StatusFrete';
@@ -251,6 +244,7 @@ import { FreteEmTransporte } from '../../DTO/FreteEmTransporte';
 import { FreteObservacao } from '../../DTO/FreteObervacao';
 import { UserClient } from '../../client/UserClient';
 import { User } from '@/model/User';
+import Modal from '@/util/classes/Modal';
 
 class LocalStatusFrete{
     carga: string = StatusFrete[StatusFrete.CARGA]
@@ -276,10 +270,8 @@ export default class FreteView extends Vue{
 
     public statusfrete: LocalStatusFrete = new LocalStatusFrete()
 
-    public showModal: boolean = false
-    public showSuccessPopUp: boolean = false
-    public showErrorPopUp: boolean = false
-    public popUpMessage: string = ""
+    public alert: Alert = new Alert()
+    public modal:Modal = new Modal()
 
     public curFrete: Frete = new Frete()
     public curStatusFrete: string = ""
@@ -297,27 +289,26 @@ export default class FreteView extends Vue{
         this.curFrete.pesoFinal = 0
         this.curFrete.pesoInicial = 0  
         this.curStatusFrete = ""
+
+        this.freteDescarga.pesoFinal = 0
+        this.freteDescarga.quilometragemFim = 0
+
+        this.freteEmTransporte.pesoInicial = 0
+        this.freteEmTransporte.quilometragemIni = 0
+
+        this.freteObservacao.observacao = ""
     }
 
     public openModal(curFrete: Frete, status: string) : void{
         this.curFrete = curFrete
         this.curStatusFrete = status
-        this.showModal = true
+        this.modal.openModal()
     }
 
     public closeModal() : void{
-        this.showModal = false
+        this.modal.closeModal()
         this.nullCurFrete()
-    }
-
-    private showSuccess(msg: string = "Atualizado com sucesso!"): void{
-        this.popUpMessage = msg
-        this.showSuccessPopUp = true
-    }
-
-    private showError(msg: string = "Erro ao atualizar"): void{
-        this.popUpMessage = msg
-        this.showErrorPopUp = true
+        this.$router.go(0)
     }
 
     private validateFreteTransporte(): boolean{
@@ -326,29 +317,30 @@ export default class FreteView extends Vue{
 
         if(this.freteEmTransporte.quilometragemIni <= 0 || this.freteEmTransporte.quilometragemIni == null)
             return false
-
+        
+            
         return true
     }
 
     public updateFreteTransporte(): void{
 
         if(!this.validateFreteTransporte()){
-            this.showError("Um ou mais campos invalidos")
+            this.alert.showPopUp(false, AlertMsg.invalidField)
+            this.closeModal()
             return
         }
 
         this.freteEmTransporte.id = this.curFrete.id
-        this.freteEmTransporte.statusAtual = this.curFrete.statusFrete
         this.freteEmTransporte.executor = this.executor
 
         this.freteClient.updateStatusEmTransporte(this.freteEmTransporte)
         .then(
             success => {
-                this.showSuccess()
+                this.alert.showPopUp(true, AlertMsg.success)
             },
             error => {
                 console.log(error)
-                this.showError(error)
+                this.alert.showPopUp(false, error)
             }
         )
 
@@ -364,12 +356,12 @@ export default class FreteView extends Vue{
 
     public updateFreteObservacao(): void{
         if(!this.validateFreteObservacao()){
-            this.showError("Um ou mais campos invalidos")
+            this.alert.showPopUp(false, AlertMsg.invalidField)
+            this.closeModal()
             return
         }
 
         this.freteObservacao.id = this.curFrete.id
-        this.freteObservacao.statusAtual = this.curFrete.statusFrete
         this.freteObservacao.executor = this.executor
 
         if(this.curStatusFrete == this.statusfrete.interrompido)
@@ -385,11 +377,11 @@ export default class FreteView extends Vue{
         this.freteClient.updateStatusInterrompido(this.freteObservacao)
         .then(
             success => {
-                this.showSuccess()
+                this.alert.showPopUp(true, AlertMsg.success)
             },
             error => {
                 console.log(error)
-                this.showError(error)
+                this.alert.showPopUp(false, error)
             }
         )
     }
@@ -398,16 +390,17 @@ export default class FreteView extends Vue{
         this.freteClient.updateStatusCancelado(this.freteObservacao)
         .then(
             success => {
-                this.showSuccess()
+                this.alert.showPopUp(true, AlertMsg.success)
             },
             error => {
                 console.log(error)
-                this.showError(error)
+                this.alert.showPopUp(false, error)
             }
         )
     }
 
     private validateFreteDescarga(): boolean{
+
         if(this.freteDescarga.pesoFinal >= 100 || this.freteDescarga.pesoFinal == null)
             return false
 
@@ -419,23 +412,23 @@ export default class FreteView extends Vue{
 
     public updateFreteDescarga(): void{
 
-        if(this.validateFreteDescarga()){
-            this.showError("Um ou mais campos invalidos")
+        if(!this.validateFreteDescarga()){
+            this.alert.showPopUp(false, AlertMsg.invalidField)
+            this.closeModal()
             return
         }
 
         this.freteDescarga.id = this.curFrete.id
-        this.freteDescarga.statusAtual = this.curFrete.statusFrete
         this.freteDescarga.executor = this.executor
 
         this.freteClient.updateStatusDescarga(this.freteDescarga)
         .then(
             success => {
-                this.showSuccess()
+                this.alert.showPopUp(true, AlertMsg.success)
             },
             error => {
                 console.log(error)
-                this.showError(error)
+                this.alert.showPopUp(false, error)
             }
         )
 
@@ -444,25 +437,28 @@ export default class FreteView extends Vue{
 
     public updateFreteFaturado(): void{
         this.freteAtualizado.id = this.curFrete.id
-        this.freteAtualizado.statusAtual = this.curFrete.statusFrete
         this.freteAtualizado.executor = this.executor
 
         this.freteClient.updateStatusFaturado(this.freteAtualizado)
         .then(
             success => {
-                this.showSuccess()
+                this.alert.showPopUp(true, AlertMsg.success)
             },
             error => {
                 console.log(error)
-                this.showError(error)
+                this.alert.showPopUp(false, error)
             }
         )
 
         this.closeModal()
     }
 
-    public async getFretes(): Promise<void>{
-        this.freteList = await this.freteClient.findAll()
+    public getFretes(): void{
+        this.freteClient.findAll()
+        .then(
+            success => {this.freteList = success},
+            error => {console.log(error)}
+        )
     }
 
     private getUser(): void {

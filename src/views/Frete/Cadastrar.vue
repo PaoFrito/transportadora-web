@@ -1,28 +1,13 @@
 <template>
 <div>
-
-<!-- MESSAGES -->
-<div class="container">
+<!-- Alerts -->
+<div>
     <!-- Sucesso -->
-    <b-message 
-        title="Sucesso!" 
-        type="is-success" 
-        v-model="showSuccessPopUp" 
-        aria-close-label="Close message">
-        {{popUpMessage}}
-    </b-message>
+    <AlertSuccess v-if="alert.success" :msg=alert.msg />
 
     <!-- Erro -->
-    <b-message 
-        title="Atencao" 
-        type="is-warning" 
-        v-model="showErrorPopUp" 
-        aria-close-label="Close message">
-        {{popUpMessage}}
-    </b-message>
+    <AlertWarning v-if="alert.error" :msg=alert.msg />
 </div>    
-
-
 
 <section class="section">
     <div class="columns">
@@ -161,10 +146,21 @@ import { Produto } from '@/model/Produto'
 import { User } from '@/model/User'
 import { Caminhao } from '@/model/Caminhao'
 
-import Vue from 'vue'
-import Component from "vue-class-component"
+import Alert from '@/util/classes/Alert'
 
-@Component
+import { Component, Vue } from 'vue-property-decorator';
+
+import AlertSuccess from '@/components/Alerts/Success.vue'
+import AlertWarning from '@/components/Alerts/Warning.vue'
+import { AlertMsg } from '@/util/enums/AlertMsg'
+
+@Component({
+  components: {
+    AlertSuccess,
+    AlertWarning
+  },
+})
+
 export default class FreteView extends Vue{
     private cidadeClient: CidadeClient = new CidadeClient()
     private estadoClient: EstadoClient = new EstadoClient()
@@ -184,41 +180,30 @@ export default class FreteView extends Vue{
     public CDO: boolean = true
     public CDD: boolean = true
 
-    public showErrorPopUp: boolean = false
-    public showSuccessPopUp: boolean = false
-    public popUpMessage: string = ""
+    public alert: Alert = new Alert()
 
     public mounted(): void {
         this.listaEstados()
         this.listaProdutos()
         this.listaCaminhao()
         this.listaUsers()
+        this.getExecutor()
     }
 
     public saveFrete(): void{
 
         if(!this.validar()){
-            this.showErrorPopUp = true
-            this.popUpMessage = "Um ou mais campos inválidos"
+            this.alert.showPopUp(false, AlertMsg.invalidField)
             return
         }
-
-        this.userClient.findById(4)
-        .then(
-            success => { this.frete.executor = success},
-            error => { console.log(error) }
-        )
 
         this.freteClient.create(this.frete)
         .then(
             success => {
-                this.showSuccessPopUp = true
-                this.showErrorPopUp = false   
-                this.popUpMessage = "Frete cadastrado com sucesso!"
+                this.alert.showPopUp(true, AlertMsg.success) 
             },
             error => {
-                this.showErrorPopUp = true
-                this.popUpMessage = error
+                this.alert.showPopUp(false, error)
                 console.log(error)
             }
         )        
@@ -300,6 +285,14 @@ export default class FreteView extends Vue{
         .then(
             res => {this.caminhaoList = res},
             e => {console.log(e)}
+        )
+    }
+
+    private getExecutor():void{
+        this.userClient.findById(4)
+        .then(
+            success => { this.frete.executor = success},
+            error => { console.log(error) }
         )
     }
 

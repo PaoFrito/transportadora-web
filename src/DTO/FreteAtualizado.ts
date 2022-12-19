@@ -4,7 +4,6 @@ import { User } from '../model/User';
 export class FreteAtualizado {
 
     id!: number
-    statusAtual!: StatusFrete
     executor!: User
 
 }

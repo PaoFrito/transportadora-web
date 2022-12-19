@@ -4,6 +4,7 @@ import { FreteEmTransporte } from '../DTO/FreteEmTransporte';
 import { FreteObservacao } from '../DTO/FreteObervacao';
 import { FreteDescarga } from '../DTO/FreteDescarga';
 import { FreteAtualizado } from '../DTO/FreteAtualizado';
+import { NewFreteDTO } from '../DTO/NewFreteDTO';
 
 export class FreteClient {
 
@@ -34,8 +35,10 @@ export class FreteClient {
         }
     }
 
-    public async create(frete: any) : Promise<void> {
+    public async create(frete: NewFreteDTO) : Promise<void> {
         try {
+            console.log("client")
+            console.log(frete)
             return (await this.axiosClient.post(``, frete)).data
         } catch (error: any) {
             console.log(error)
