@@ -22,19 +22,21 @@
                                     <th>Ultima modificacao</th>
                                     <th>Situacao</th>
                                     <th>Tipo de despesa</th>
+                                    <th>Valor</th>
                                     <th>Motorista que criou</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="despesa in despesaList">
                                     <td>
-                                        <b-button tag="router-link" v-bind:to="'/despesa/' + despesa.id" class="is-medium" type="is-info">↗</b-button>
+                                        <b-button tag="router-link" v-bind:to="'despesa/'+ despesa.id" class="is-medium" type="is-info">↗</b-button>
                                     </td>
                                     <td>{{ despesa.id }}</td>
                                     <td>{{ despesa.data }}</td>
                                     <td>{{ despesa.atualizado }}</td>
-                                    <td><span class="tag is-info">Aprovada</span></td>
+                                    <td><span class="tag is-info">{{aprovada(despesa)}}</span></td>
                                     <td>{{ despesa.tipoDespesa.nome }}</td>
+                                    <td>{{ despesa.valor }}</td>
                                     <td>{{ despesa.motorista.nome }}</td>
                                 </tr>
                             </tbody>
@@ -54,7 +56,7 @@ import AlertSuccess from '@/components/Alerts/Success.vue'
 
 import { DespesaClient } from '@/client/DespesaClient'
 import { Despesa } from '@/model/Despesa'
-
+import { User } from '@/model/User'
 
 @Component({
     components: {
@@ -77,6 +79,14 @@ export default class FreteView extends Vue {
                 this.despesaList[i].aprovador.nome = "Aprovado"
             }
         }
+    }
+
+    public aprovada(despesa: Despesa): string{
+        console.log(despesa.aprovador)
+        if(despesa.aprovador == null)
+            return "Aguardando aprovacao"
+        else    
+            return "Aprovada"
     }
 
     private getDespesas(): void{

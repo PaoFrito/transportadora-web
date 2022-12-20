@@ -1,4 +1,5 @@
 import { Despesa } from '@/model/Despesa'
+import { User } from '@/model/User'
 import axios, { AxiosInstance } from 'axios'
 
 export class DespesaClient {
@@ -41,6 +42,14 @@ export class DespesaClient {
     public async create(despesa: Despesa) : Promise<void> {
         try {
             return (await this.axiosClient.post(``, despesa)).data
+        } catch (error: any) {
+            return Promise.reject(error.response)
+        }
+    }
+
+    public async aprovar(id: number, userId: number) : Promise<void> {
+        try {
+            return (await this.axiosClient.put(`/aprovar/${id}`, userId)).data
         } catch (error: any) {
             return Promise.reject(error.response)
         }

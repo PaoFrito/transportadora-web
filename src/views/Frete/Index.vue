@@ -324,7 +324,9 @@ export default class FreteView extends Vue {
     public closeModal(): void {
         this.modal.closeModal()
         this.nullCurFrete()
-        this.$router.go(0)
+        setTimeout(() => {
+            this.$router.go(0)
+        }, 3000)
     }
 
     private validateFreteTransporte(): boolean {

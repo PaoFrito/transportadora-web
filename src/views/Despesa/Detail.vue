@@ -54,24 +54,6 @@
                 <div class="container">
                     <div class="columns">
                         <div class="column">
-                            <b-field label="Data da Despesa">
-                                <b-datepicker
-                                    :disabled="detail"
-                                    v-model="despesa.data"
-                                    placeholder="Selecione uma data"
-                                    :min-date="( d => new Date(d.setDate(d.getDate()-1)) )(new Date)"
-                                    :locale="pt-BR"
-                                    icon-right-clickable
-                                    trap-focus>
-                                    <b-button
-                                        label="Hoje"
-                                        type="is-primary"
-                                        @click="despesa.data = new Date()"
-                                    ></b-button>
-                                </b-datepicker>
-                            </b-field>
-                        </div>
-                        <div class="column">
                             <b-field v-bind:label="freteLabel">
                                 <b-select v-model="despesa.frete" placeholder="-- Selecione --" :disabled="detail">
                                     <option v-for="frete in freteList" :value="frete">{{ frete.id }} / {{ frete.statusFrete }} / {{ frete.cidadeOrigem.nome}}~{{ frete.cidadeDestino.nome}}</option>
@@ -82,8 +64,11 @@
                 </div>      
                 <div class="division"></div>
                 <div class="container">
+                    <div v-if="detail && isAdm">
+                        <b-button @click="aprovar()" type="is-primary">Aprovar despesa</b-button>
+                    </div>
                     <div v-if="edit || create">
-                        <b-button @click="editOff()" class="mr-6">Cancelar</b-button>
+                        <b-button @click="cancelar()" class="mr-6">Cancelar</b-button>
                         <b-button type="is-success" @click="salvar()">Enviar</b-button>
                     </div>
                 </div>
@@ -113,6 +98,7 @@ import { UserClient } from '@/client/UserClient';
 import { FreteClient } from '@/client/FreteClient';
 import { Despesa } from '@/model/Despesa';
 import { DespesaClient } from '@/client/DespesaClient';
+import { Grupo } from '@/model/enum/Grupo';
 
 @Component({
     components: {
@@ -134,6 +120,7 @@ export default class DespesaDetailView extends Vue{
     public alert: Alert = new Alert()
 
     private loggedUser: LoggedUser = new LoggedUser()
+    public isAdm: boolean = false
 
     private despesaClient: DespesaClient = new DespesaClient()
     private tipoDespesaClient: TipoDespesaClient = new TipoDespesaClient() 
@@ -147,23 +134,26 @@ export default class DespesaDetailView extends Vue{
     public despesa: Despesa = new Despesa()
 
     public mounted(): void {
-        this.despesaId = <number>(<unknown>this.$route.params.DespesaId)
+        this.despesaId = Number(this.$route.params.despesaId)
+            
         this.change()
-        this.loggedUser.setId()
+        this.loggedUser.setId(4)
+        this.loggedUser.setGrupo(Grupo.ADMINISTRADOR)
         this.getDespesas()
         this.getTipoDespesas()
         this.getFretes()
         this.getMotorista()
 
+        this.isAdm = this.loggedUser.getGrupo() == Grupo.ADMINISTRADOR
+
         if(this.despesaId != 0 && !this.edit)
             this.freteLabel = "Anexar despesa a qual frete?"
         else
             this.freteLabel = "Despesa anexada ao frete:"
-        
     }
 
     private change(): void{
-        if(this.despesaId = 0)
+        if(this.despesaId == 0)
             this.create = true
         else
             this.detail = true
@@ -176,16 +166,31 @@ export default class DespesaDetailView extends Vue{
         if(this.despesa.valor == null || this.despesa.valor <= 0)
             return false
 
-        if(this.despesa.data == null)
-            return false
-
         if(this.despesa.frete == null)
             return false
 
         return true
     }
 
+    public aprovar(): void{
+        console.log(this.despesa.id)
+        console.log(this.loggedUser.getId())
+        this.despesaClient.aprovar(this.despesa.id, this.loggedUser.getId())
+        .then(
+            success => this.alert.showPopUp(true, AlertMsg.success),
+            error => {
+                this.alert.showPopUp(false, error)
+                console.log(error)
+            }
+        )
+    }
+
+    public cancelar(): void{
+        this.$router.go(-1)
+    }
+
     public salvar(): void{
+
         if(!this.validation()){
             this.alert.showPopUp(false, AlertMsg.invalidField)
             return
@@ -222,7 +227,11 @@ export default class DespesaDetailView extends Vue{
             success => {
                 this.despesa = success                
             },
-            error => {console.log(error)}
+            error => {
+                console.log(error)
+                if(this.despesaId != 0)
+                    this.$router.go(-1)
+            }
         )
     }
 
